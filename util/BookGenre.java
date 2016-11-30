@@ -34,10 +34,19 @@ public enum BookGenre {
         this.bookGenre = bookGenre;
     }
 
+    /**
+     * get book genre
+     * @return
+     */
     public String getBookGenre(){
         return this.bookGenre;
     }
 
+    /**
+     * get book genre from a given string
+     * @param bookGenre
+     * @return
+     */
     public static BookGenre fromString(String bookGenre){
         if(bookGenre != null){
             for(BookGenre genre: BookGenre.values()){
@@ -48,6 +57,4 @@ public enum BookGenre {
         }
         return null;
     }
-
-
 }

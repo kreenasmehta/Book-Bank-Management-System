@@ -5,6 +5,8 @@ import BookBankSystem.util.BookGenre;
 import BookBankSystem.util.BookStatus;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by kreenamehta on 11/29/16.
@@ -125,5 +127,33 @@ public class BookDAO {
         } finally {
             updateBook.close();
         }
+    }
+
+    public List<String> getAvailableBooks(Connection connection) throws SQLException {
+        List<String> availableBooks = new ArrayList<>();
+        PreparedStatement getAvailableBooks = connection.prepareStatement(
+                "SELECT b.title FROM Book b where b.status=?;"
+        );
+        SQLWarning warning = getAvailableBooks.getWarnings();
+        while (warning != null){
+            System.err.println("Database warning: " + warning);
+        }
+        try{
+            getAvailableBooks.setString(1, "available");
+            ResultSet rs = getAvailableBooks.executeQuery();
+            SQLWarning queryWarning = getAvailableBooks.getWarnings();
+            while (queryWarning != null){
+                System.err.println("Query warning: " + queryWarning);
+            }
+            while(rs.next()){
+                availableBooks.add(rs.getString(1));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            getAvailableBooks.close();
+        }
+
+        return availableBooks;
     }
 }

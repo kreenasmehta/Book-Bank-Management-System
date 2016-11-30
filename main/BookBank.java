@@ -1,5 +1,6 @@
 package BookBankSystem.main;
 
+import BookBankSystem.dao.BillDAO;
 import BookBankSystem.dao.BookDAO;
 import BookBankSystem.dao.MemberDAO;
 import BookBankSystem.dao.TransactionDAO;
@@ -11,7 +12,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by kreenamehta on 11/29/16.
@@ -120,21 +123,24 @@ public class BookBank {
      * @throws SQLException
      */
     private static void bookBankOptions(Member member, Connection connection) throws SQLException {
-        System.out.println("Enter 1 to get a new book to read. \n" +
-                "Enter 2 to return a book. \n" +
-                "Enter 3 to check your bill. \n" +
-                "Enter 4 to logout.");
+        System.out.println("Enter 1 to get a new book to read (Search any book by the title name). \n" +
+                "Enter 2 to see the list of all the available books. \n" +
+                "Enter 3 to return a book. \n" +
+                "Enter 4 to logout. \n" +
+                "Enter 5 to delete your membership");
         int bookBankOption = sc.nextInt();
         if(bookBankOption == 1){
             readNewBook(member, connection);
-        } else if (bookBankOption == 2){
+        } else if(bookBankOption == 2){
+            getAvailableBooks(connection, member);
+        }else if (bookBankOption == 3){
             returnBook(member, connection);
-        } else if (bookBankOption == 3){
-
         } else if(bookBankOption == 4){
             System.out.println("Logging out of Book Bank...");
             System.exit(0);
-        } else{
+        } else if (bookBankOption == 5){
+            deleteMembership(member, connection);
+        }else{
             System.out.println("Please enter the correct option.");
             bookBankOptions(member, connection);
         }
@@ -169,6 +175,25 @@ public class BookBank {
         }
     }
 
+    private static void getAvailableBooks(Connection connection, Member member) throws SQLException {
+        BookDAO bookDAO = new BookDAO();
+        List<String> availableBooks = bookDAO.getAvailableBooks(connection);
+        if(availableBooks.size()>0){
+            System.out.println();
+            System.out.println("Following books are currently available");
+            for(String availableBook: availableBooks){
+                System.out.println(availableBook);
+            }
+        } else{
+            System.out.println();
+            System.out.println("No books are currently avaiable");
+        }
+        System.out.println("Redirecting back to the main menu...");
+        System.out.println();
+        bookBankOptions(member, connection);
+
+    }
+
     /**
      * update the book to be unavailable
      * @param book
@@ -190,7 +215,7 @@ public class BookBank {
         TransactionDAO transactionDAO = new TransactionDAO();
         Calendar c = Calendar.getInstance();
         String dateOfIssue = c.getTime().toString();
-        c.add(Calendar.MONTH, 1);
+        c.add(Calendar.MINUTE, 1);
         String dateOfReturn = c.getTime().toString();
         int transactionId = transactionDAO.createTransaction(connection, member.getId(), book.getId(), dateOfIssue, dateOfReturn);
         if(transactionId != 0){
@@ -203,11 +228,19 @@ public class BookBank {
     }
 
 
+    /**
+     * return a book
+     * @param member
+     * @param connection
+     * @throws SQLException
+     */
     private static void returnBook(Member member, Connection connection) throws SQLException {
         System.out.println("Enter your transaction id");
         int transactionId = sc.nextInt();
         TransactionDAO transactionDAO = new TransactionDAO();
         Transaction transaction = transactionDAO.getTransactionById(connection, transactionId);
+        updateBookToBeAvailable(transaction.getBookId(), connection);
+        updateTransaction(transactionDAO, transactionId, connection);
         String dateOfReturn = transaction.getDateOfReturn();
         try{
             DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
@@ -216,18 +249,23 @@ public class BookBank {
             Date today = c.getTime();
             int compare = today.compareTo(dueDate);
             if(compare == 0 || compare < 0){
-                updateBookToBeAvailable(transaction.getBookId(), connection);
                 System.out.println("Return successful. \n" +
                         "Returning back to the banking options....");
                 bookBankOptions(member, connection);
             } else{
-                // create bill
+                createBill(dueDate, today, member.getId(), transactionId, connection);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
+    /**
+     * update the book to be avialable after return
+     * @param bookId
+     * @param connection
+     * @throws SQLException
+     */
     private static void updateBookToBeAvailable(int bookId, Connection connection) throws SQLException {
         BookDAO bookDAO = new BookDAO();
         try {
@@ -235,5 +273,59 @@ public class BookBank {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * update the transaction to have book returned to be true
+     * @param transactionDAO
+     * @param transactionId
+     * @param connection
+     * @throws SQLException
+     */
+    private static void updateTransaction(TransactionDAO transactionDAO, int transactionId, Connection connection) throws SQLException {
+        transactionDAO.updateTransaction(connection, transactionId);
+    }
+
+    /**
+     * create a new bill
+     * @param dueDate
+     * @param today
+     * @param memberId
+     * @param transactionId
+     * @param connection
+     * @throws SQLException
+     */
+    private static void createBill(Date dueDate,
+                                   Date today,
+                                   int memberId,
+                                   int transactionId,
+                                   Connection connection) throws SQLException {
+        long dueDateLong = dueDate.getTime();
+        long todayLong = today.getTime();
+        int noOfDaysDue = (int) TimeUnit.DAYS.convert(todayLong - dueDateLong, TimeUnit.MILLISECONDS);
+        int amount = (noOfDaysDue+1)*10;
+        boolean isPad = false;
+        BillDAO billDAO = new BillDAO();
+        int billId = billDAO.createBill(connection, today.toString(), memberId, transactionId, amount, isPad);
+        if(billId != 0){
+            System.out.println("The billing details are as follows: \n" +
+                    "Bill No.: " + billId +"\n" +
+                    "Bill amount: " + amount);
+        }
+
+    }
+
+    /**
+     * deletes the membership of the logged in person
+     * @param member
+     * @param connection
+     * @throws SQLException
+     */
+    private static void deleteMembership(Member member, Connection connection) throws SQLException {
+        MemberDAO memberDAO = new MemberDAO();
+        memberDAO.deleteMembership(connection, member.getId());
+        System.out.println("Your membership from Book Bank has been terminated. \n" +
+                "Logging out of the system...");
+        System.exit(0);
     }
 }

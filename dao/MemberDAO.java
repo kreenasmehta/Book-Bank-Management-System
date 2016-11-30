@@ -143,4 +143,29 @@ public class MemberDAO {
         }
         return memberId;
     }
+
+    public void deleteMembership(Connection connection, int memberId) throws SQLException {
+        PreparedStatement deleteMembership = connection.prepareStatement(
+                "DELETE FROM Member where id=?;"
+        );
+        SQLWarning warning = deleteMembership.getWarnings();
+        while(warning != null){
+            System.err.println("Database warning: " + warning);
+        }
+        try{
+            deleteMembership.setInt(1, memberId);
+            int deleteCount = deleteMembership.executeUpdate();
+            SQLWarning queryWarning = deleteMembership.getWarnings();
+            while(queryWarning != null){
+                System.err.println("Query warning: " + queryWarning);
+            }
+            if(deleteCount != 1){
+                throw new Exception("Error in deleting member.");
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            deleteMembership.close();
+        }
+    }
 }
