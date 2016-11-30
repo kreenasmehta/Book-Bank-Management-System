@@ -2,6 +2,7 @@ package BookBankSystem.main;
 
 import BookBankSystem.dao.BookDAO;
 import BookBankSystem.dao.MemberDAO;
+import BookBankSystem.dao.TransactionDAO;
 import BookBankSystem.util.Book;
 import BookBankSystem.util.BookStatus;
 import BookBankSystem.util.ConnectionFactory;
@@ -9,6 +10,7 @@ import BookBankSystem.util.Member;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.Scanner;
 
 /**
@@ -158,7 +160,7 @@ public class BookBank {
                 readNewBook(member, connection);
             } else{
                 updateBookToBeUnavailable(book, bookDAO, connection);
-                assignBookToMember(member.getId(), book.getId(), connection);
+                assignBookToMember(member, book, connection);
             }
         } else{
             System.out.println("This book is not present in the Book Bank. \n" +
@@ -179,11 +181,22 @@ public class BookBank {
 
     /**
      * assign the book to currently logged in member by creating a new transaction
-     * @param memberId
-     * @param bookId
+     * @param member
+     * @param book
      * @param connection
+     * @throws SQLException
      */
-    private static void assignBookToMember(int memberId, int bookId, Connection connection){
-
+    private static void assignBookToMember(Member member, Book book, Connection connection) throws SQLException {
+        TransactionDAO transactionDAO = new TransactionDAO();
+        Calendar c = Calendar.getInstance();
+        String dateOfIssue = c.getTime().toString();
+        c.add(Calendar.MONTH, 1);
+        String dateOfReturn = c.getTime().toString();
+        int transactionId = transactionDAO.createTransaction(connection, member.getId(), book.getId(), dateOfIssue, dateOfReturn);
+        if(transactionId != 0){
+            System.out.println("Successful transaction. Return date of your book " + book.getTitle() + " is: " + dateOfReturn);
+            System.out.println("Returning back to the banking options....");
+            bookBankOptions(member, connection);
+        }
     }
 }
