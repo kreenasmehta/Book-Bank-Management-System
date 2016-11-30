@@ -194,7 +194,9 @@ public class BookBank {
         String dateOfReturn = c.getTime().toString();
         int transactionId = transactionDAO.createTransaction(connection, member.getId(), book.getId(), dateOfIssue, dateOfReturn);
         if(transactionId != 0){
-            System.out.println("Successful transaction. Return date of your book " + book.getTitle() + " is: " + dateOfReturn);
+            System.out.println("Successful transaction. \n" +
+                    "Return date of your book " + book.getTitle() + " is: " + dateOfReturn +". \n" +
+                    "Your transaction ID is " + transactionId);
             System.out.println("Returning back to the banking options....");
             bookBankOptions(member, connection);
         }
