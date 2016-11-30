@@ -93,4 +93,37 @@ public class BookDAO {
             updateBook.close();
         }
     }
+
+
+    /**
+     * update the given book to be available
+     * @param connection
+     * @param bookId
+     * @throws SQLException
+     */
+    public void updateBookToBeAvailable(Connection connection, int bookId) throws SQLException {
+        PreparedStatement updateBook = connection.prepareStatement(
+                "UPDATE Book b set b.status=? WHERE b.id=?;"
+        );
+        SQLWarning warning = updateBook.getWarnings();
+        while (warning != null){
+            System.err.println("Database warning: " + warning);
+        }
+        try{
+            updateBook.setString(1, "available");
+            updateBook.setInt(2, bookId);
+            int updateCount = updateBook.executeUpdate();
+            SQLWarning queryWarning = updateBook.getWarnings();
+            while (queryWarning != null){
+                System.err.println("Query warning: " + queryWarning);
+            }
+            if(updateCount != 1){
+                throw new Exception("Error in changing the book status to be available.");
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            updateBook.close();
+        }
+    }
 }

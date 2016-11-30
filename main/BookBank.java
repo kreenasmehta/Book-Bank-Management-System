@@ -3,14 +3,14 @@ package BookBankSystem.main;
 import BookBankSystem.dao.BookDAO;
 import BookBankSystem.dao.MemberDAO;
 import BookBankSystem.dao.TransactionDAO;
-import BookBankSystem.util.Book;
-import BookBankSystem.util.BookStatus;
-import BookBankSystem.util.ConnectionFactory;
-import BookBankSystem.util.Member;
+import BookBankSystem.util.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Scanner;
 
 /**
@@ -128,7 +128,7 @@ public class BookBank {
         if(bookBankOption == 1){
             readNewBook(member, connection);
         } else if (bookBankOption == 2){
-
+            returnBook(member, connection);
         } else if (bookBankOption == 3){
 
         } else if(bookBankOption == 4){
@@ -199,6 +199,41 @@ public class BookBank {
                     "Your transaction ID is " + transactionId);
             System.out.println("Returning back to the banking options....");
             bookBankOptions(member, connection);
+        }
+    }
+
+
+    private static void returnBook(Member member, Connection connection) throws SQLException {
+        System.out.println("Enter your transaction id");
+        int transactionId = sc.nextInt();
+        TransactionDAO transactionDAO = new TransactionDAO();
+        Transaction transaction = transactionDAO.getTransactionById(connection, transactionId);
+        String dateOfReturn = transaction.getDateOfReturn();
+        try{
+            DateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy");
+            Date dueDate = (Date)formatter.parse(dateOfReturn);
+            Calendar c = Calendar.getInstance();
+            Date today = c.getTime();
+            int compare = today.compareTo(dueDate);
+            if(compare == 0 || compare < 0){
+                updateBookToBeAvailable(transaction.getBookId(), connection);
+                System.out.println("Return successful. \n" +
+                        "Returning back to the banking options....");
+                bookBankOptions(member, connection);
+            } else{
+                // create bill
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private static void updateBookToBeAvailable(int bookId, Connection connection) throws SQLException {
+        BookDAO bookDAO = new BookDAO();
+        try {
+            bookDAO.updateBookToBeAvailable(connection, bookId);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

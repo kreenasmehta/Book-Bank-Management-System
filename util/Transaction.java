@@ -48,6 +48,10 @@ public class Transaction {
         this.bookId = bookId;
     }
 
+    public int getBookId(){
+        return bookId;
+    }
+
     public void setDateOfIssue(String dateOfIssue){
         this.dateOfIssue = dateOfIssue;
     }
