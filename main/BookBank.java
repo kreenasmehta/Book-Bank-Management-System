@@ -157,7 +157,8 @@ public class BookBank {
                         "Please search for another book title.");
                 readNewBook(member, connection);
             } else{
-                assignBookToMember(member, book, connection);
+                updateBookToBeUnavailable(book, bookDAO, connection);
+                assignBookToMember(member.getId(), book.getId(), connection);
             }
         } else{
             System.out.println("This book is not present in the Book Bank. \n" +
@@ -167,12 +168,22 @@ public class BookBank {
     }
 
     /**
-     * assigns an available book to the currently logged in member
-     * @param member
+     * update the book to be unavailable
      * @param book
      * @param connection
      */
-    private static void assignBookToMember(Member member, Book book, Connection connection){
+    private static void updateBookToBeUnavailable(Book book, BookDAO bookDAO, Connection connection) throws SQLException {
+        // update book to be unavailable
+        bookDAO.updateBookToBeUnavailable(connection, book);
+    }
+
+    /**
+     * assign the book to currently logged in member by creating a new transaction
+     * @param memberId
+     * @param bookId
+     * @param connection
+     */
+    private static void assignBookToMember(int memberId, int bookId, Connection connection){
 
     }
 }

@@ -16,6 +16,13 @@ public class BookDAO {
 
     }
 
+    /**
+     * search book by title
+     * @param connection
+     * @param bookName
+     * @return
+     * @throws SQLException
+     */
     public Book searchBook(Connection connection, String bookName) throws SQLException {
 
         Book book = new Book();
@@ -52,5 +59,38 @@ public class BookDAO {
 
         return book;
 
+    }
+
+
+    /**
+     * update the given book to be unavailable
+     * @param connection
+     * @param book
+     * @throws SQLException
+     */
+    public void updateBookToBeUnavailable(Connection connection, Book book) throws SQLException {
+        PreparedStatement updateBook = connection.prepareStatement(
+                "UPDATE Book b set b.status=? WHERE b.id=?;"
+        );
+        SQLWarning warning = updateBook.getWarnings();
+        while (warning != null){
+            System.err.println("Database warning: " + warning);
+        }
+        try{
+            updateBook.setString(1, "unavailable");
+            updateBook.setInt(2, book.getId());
+            int updateCount = updateBook.executeUpdate();
+            SQLWarning queryWarning = updateBook.getWarnings();
+            while (queryWarning != null){
+                System.err.println("Query warning: " + queryWarning);
+            }
+            if(updateCount != 1){
+                throw new Exception("Error in changing the book status to be unavailable.");
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            updateBook.close();
+        }
     }
 }
