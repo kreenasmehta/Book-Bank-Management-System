@@ -151,7 +151,6 @@ public class BookDAO {
                 System.err.println("Query warning: " + queryWarning);
             }
             while(rs.next()){
-//                availableBooks.add(rs.getString(1));
                 availableBooks.put(rs.getString(1), rs.getString(2));
             }
         }catch (Exception e){
