@@ -144,6 +144,12 @@ public class MemberDAO {
         return memberId;
     }
 
+    /**
+     * deletes an entry of the given member
+     * @param connection
+     * @param memberId
+     * @throws SQLException
+     */
     public void deleteMembership(Connection connection, int memberId) throws SQLException {
         PreparedStatement deleteMembership = connection.prepareStatement(
                 "DELETE FROM Member where id=?;"

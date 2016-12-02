@@ -5,8 +5,7 @@ import BookBankSystem.util.BookGenre;
 import BookBankSystem.util.BookStatus;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Created by kreenamehta on 11/29/16.
@@ -129,10 +128,16 @@ public class BookDAO {
         }
     }
 
-    public List<String> getAvailableBooks(Connection connection) throws SQLException {
-        List<String> availableBooks = new ArrayList<>();
+    /**
+     * selects all the available books with their genre
+     * @param connection
+     * @return
+     * @throws SQLException
+     */
+    public HashMap<String, String> getAvailableBooks(Connection connection) throws SQLException {
+        HashMap<String, String> availableBooks = new HashMap<>();
         PreparedStatement getAvailableBooks = connection.prepareStatement(
-                "SELECT b.title FROM Book b where b.status=?;"
+                "SELECT b.title, b.genre FROM Book b where b.status=?;"
         );
         SQLWarning warning = getAvailableBooks.getWarnings();
         while (warning != null){
@@ -146,7 +151,8 @@ public class BookDAO {
                 System.err.println("Query warning: " + queryWarning);
             }
             while(rs.next()){
-                availableBooks.add(rs.getString(1));
+//                availableBooks.add(rs.getString(1));
+                availableBooks.put(rs.getString(1), rs.getString(2));
             }
         }catch (Exception e){
             e.printStackTrace();

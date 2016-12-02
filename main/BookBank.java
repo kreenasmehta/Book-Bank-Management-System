@@ -10,10 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -175,18 +172,28 @@ public class BookBank {
         }
     }
 
+    /**
+     * get a list of all the available books with the genre
+     * @param connection
+     * @param member
+     * @throws SQLException
+     */
     private static void getAvailableBooks(Connection connection, Member member) throws SQLException {
         BookDAO bookDAO = new BookDAO();
-        List<String> availableBooks = bookDAO.getAvailableBooks(connection);
+        HashMap<String, String> availableBooks = bookDAO.getAvailableBooks(connection);
         if(availableBooks.size()>0){
             System.out.println();
-            System.out.println("Following books are currently available");
-            for(String availableBook: availableBooks){
-                System.out.println(availableBook);
+            System.out.println("Following books are currently available:");
+            System.out.println();
+            int i = 1;
+            for(String availableBook: availableBooks.keySet()){
+                System.out.println(i++ +". Title: " + availableBook);
+                System.out.println("   Genre: " + availableBooks.get(availableBook));
+                System.out.println();
             }
         } else{
             System.out.println();
-            System.out.println("No books are currently avaiable");
+            System.out.println("No books are currently available");
         }
         System.out.println("Redirecting back to the main menu...");
         System.out.println();
